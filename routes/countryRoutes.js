@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const {protect, checkSignIn} = require('../middleware/auth');
 const {
   createCountry,
   getAllCountries,

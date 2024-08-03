@@ -1,12 +1,11 @@
 const multer = require('multer');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
-
 const User = require('../models/User');
 const Warehouse = require('../models/Warehouse');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { createOne, hashPassword } = require('../utils/functions');
+// const { createOne, hashPassword } = require('../utils/functions');
 
 // Rate limiter to prevent brute-force attacks
 const limiter = rateLimit({
@@ -30,6 +29,11 @@ const signToken = (id, user) => {
     );
 };
 
+// Helper function to validate email format
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
 
 exports.signIn = async (req, res) => {
     try {
@@ -40,12 +44,12 @@ exports.signIn = async (req, res) => {
             return res.status(400).json({ message: "All fields required" });
         }
     
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ where: { email } });
         if (!user) {
             console.error('User not found');
             return res.status(404).json({ message: "User not found" });
         }
-    
+       
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
             console.error('Incorrect password');
@@ -57,7 +61,7 @@ exports.signIn = async (req, res) => {
             return res.status(403).json({ message: "Access denied" });
         }
         
-        const token = signToken(user._id, user)
+        const token = signToken(user.id, user);
 
         return res.status(200).json({
             status: true,
@@ -74,38 +78,17 @@ exports.signIn = async (req, res) => {
     }
 };
 
-        // comment: i designed this sign in system first it requires both email and password, in step 2 it looks for email in db, if found it checks the password, then it logs in the user.. above all that i haveand token expire in one hour
-
-// Helper function to validate email format
-function validateEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-}
-
-// Configuring multer for file uploads // not in use now
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/'); // Directory in which to keep uploaded files i.e. uploads in root dir. 
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname)); // Appending extension
-    }
-});
-
-// const upload = multer({ storage: storage }); // for image.... but now !needed. 
-
-
 exports.registerAdmin = async (req, res) => {
-    // Ensure the user is an 1 = master/super admin
+    // Ensure the user is a mastere
     if (req.user.role !== '1') {
-        return res.status(403).json({ msg: 'Only master user can add new registrations.' });
+        return res.status(403).json({ msg: 'Only master can add new registrations.' });
     }
 
-    const { name, email, password, confirmPassword, role, warehouse, _status } = req.body;
+    const { name, email, password, confirmPassword, role, warehouse, isActive } = req.body;
 
     // Validate required fields
-    if (!name || !email || !password || !confirmPassword || !role || (role === 'admin' && !warehouse)) {
-        return res.status(400).json({ msg: 'fill all the fields.' });
+    if (!name || !email || !password || !confirmPassword || !role || (role !== '1' && !warehouse)) {
+        return res.status(400).json({ msg: 'Fill all the fields.' });
     }
 
     // Validate email format
@@ -121,34 +104,33 @@ exports.registerAdmin = async (req, res) => {
     try {
         // Check if warehouse exists and get its ID
         let warehouseRecord = null;
-        if (role === 'admin') {
-            warehouseRecord = await Warehouse.findById(warehouse);
+        if (role !== '1') {
+            warehouseRecord = await Warehouse.findByPk(warehouse);
             if (!warehouseRecord) {
-                return res.status(404).json({ message: 'selected warehouse not found.' });
+                return res.status(404).json({ message: 'Selected warehouse not found.' });
             }
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const newUser = new User({
+        const newUser = await User.create({
             name,
             email,
             password: hashedPassword,
             role,
-            wh_id: role === 'admin' ? warehouseRecord._id : null,
-            _status: typeof _status !== 'undefined' ? _status : active,
+            warehouseId: role !== '1' ? warehouseRecord.id : null,
+            isActive: typeof isActive !== 'undefined' ? isActive : true,
         });
 
-        await newUser.save();
-        res.status(201).json({ message: 'new admin registered successfully' });
+        res.status(201).json({ message: 'New admin registered successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
 
-
-// logging out a user. 
+// Logging out a user
 exports.logout = (req, res) => {
-    res.clearCookie('token'); // now removing the JWT token from cookies
-    res.json({ message: 'Successfully logged out' });
+    res.clearCookie('token'); // Removing the JWT token from cookies
+    res.status(200).json({ message: 'Successfully logged out' });
 };
+

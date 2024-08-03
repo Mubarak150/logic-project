@@ -40,7 +40,7 @@ const protect = async (req, res, next) => {
         }
 
         // 3. if the user exists: 
-        const user = await User.findById(verifyToken.id);
+        const user = await User.findByPk(verifyToken.id);
         if (!user) {
             return res.status(404).json({ status: false, message: 'User with given token not found' });
         }
@@ -52,7 +52,7 @@ const protect = async (req, res, next) => {
         // }
 
         // 5. allow the user to the page: 
-        req.user = verifyToken; // Attach decoded user data to request
+        req.user = user; // Attach decoded user data to request
         next(); // Proceed to next middleware or route handler
 
     } catch (error) {

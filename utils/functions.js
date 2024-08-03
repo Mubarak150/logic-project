@@ -1,53 +1,61 @@
 const ExcelJS = require('exceljs');
-const mongoose = require('mongoose');
+const { Op } = require('sequelize'); // Sequelize operators
 const PDFDocument = require('pdfkit');
 
+// Create a new record in the database
 const createOne = async (Model, data) => {
     try {
-        const doc = new Model(data);
-        await doc.save();
+        const doc = await Model.create(data);
         return doc;
     } catch (error) {
         throw new Error(error.message);
     }
 };
 
+// Read all records with pagination and filters
 const readAll = async (Model, query = {}) => {
     try {
-      const { page = 1, limit = 20, ...filters } = query;
-      const skip = (page - 1) * limit;
-  
-      const docs = await Model.find(filters)
-        .skip(skip)
-        .limit(parseInt(limit, 10));
-  
-      const totalItems = await Model.countDocuments(filters);
-      const totalPages = Math.ceil(totalItems / limit);
-  
-      return {
-        data: docs,
-        pagination: {
-          totalItems,
-          totalPages,
-          currentPage: parseInt(page, 10),
-          pageSize: parseInt(limit, 10)
-        }
-      };
-    } catch (error) {
-      throw new Error(error.message);
-    }
-  };
+        const { page = 1, limit = 20, ...filters } = query;
+        const skip = (page - 1) * limit;
 
+        // Apply filters to the Sequelize query
+        const docs = await Model.findAll({
+            where: filters,
+            offset: skip,
+            limit: parseInt(limit, 10)
+        });
+
+        // Count total records
+        const totalItems = await Model.count({
+            where: filters
+        });
+        const totalPages = Math.ceil(totalItems / limit);
+
+        return {
+            data: docs,
+            pagination: {
+                totalItems,
+                totalPages,
+                currentPage: parseInt(page, 10),
+                pageSize: parseInt(limit, 10)
+            }
+        };
+    } catch (error) {
+        throw new Error(error.message);
+    }
+};
+
+// Export data to Excel
 const readAllExcel = async (req, res) => {
     try {
         const { modelName, ...query } = req.query;
 
-        // Validate and get the model from mongoose models
-        if (modelName=="User" || !mongoose.models[modelName] ) {
+        // Validate and get the model from Sequelize models
+        if (!Model[modelName]) {
             return res.status(400).json({ error: 'Invalid model name' });
         }
 
-        const Model = mongoose.models[modelName];
+        const Model = require('../models')[modelName]; // Adjust according to your actual model path
 
         // Get the filtered data with pagination
         const { data, pagination } = await readAll(Model, query);
@@ -57,14 +65,14 @@ const readAllExcel = async (req, res) => {
         const worksheet = workbook.addWorksheet('Sheet 1');
 
         // Add columns to worksheet
-        const columns = Object.keys(Model.schema.paths)
-        .filter(key => key !== '_id' && key !== '__v')
-        .map(key => ({ header: key, key }));
+        const columns = Object.keys(Model.rawAttributes)
+            .filter(key => key !== 'id')
+            .map(key => ({ header: key, key }));
         worksheet.columns = columns;
 
         // Add rows to worksheet
         data.forEach(item => {
-            worksheet.addRow(item.toObject());
+            worksheet.addRow(item.toJSON());
         });
 
         // Set response headers
@@ -81,21 +89,21 @@ const readAllExcel = async (req, res) => {
         }
     }
 };
-  
 
+// Export data to PDF
 const readAllPDF = async (req, res) => {
     try {
         const { modelName, ...query } = req.query;
 
-        if (modelName === "Users" || !mongoose.models[modelName]) {
+        if (!Model[modelName]) {
             return res.status(400).json({ error: 'Invalid model name' });
         }
 
-        const Model = mongoose.models[modelName];
+        const Model = require('../models')[modelName];
         const { data } = await readAll(Model, query);
 
-        const columns = Object.keys(Model.schema.paths)
-            .filter(key => key !== '_id' && key !== '__v');
+        const columns = Object.keys(Model.rawAttributes)
+            .filter(key => key !== 'id');
 
         // Calculate the maximum width required for each column
         const columnWidths = columns.map(column => {
@@ -183,11 +191,10 @@ const readAllPDF = async (req, res) => {
     }
 };
 
-
-
+// Find a document by ID
 const readById = async (Model, id) => {
     try {
-        const doc = await Model.findById(id);
+        const doc = await Model.findByPk(id);
         if (!doc) throw new Error('Document not found');
         return doc;
     } catch (error) {
@@ -195,26 +202,40 @@ const readById = async (Model, id) => {
     }
 };
 
+// Update a document by ID
 const updateById = async (Model, id, data) => {
     try {
-        const doc = await Model.findByIdAndUpdate(id, data, { new: true });
-        if (!doc) throw new Error('Document not found');
-        return doc;
+        // Perform the update operation
+        const [affectedRows] = await Model.update(data, { where: { id } });
+
+        // Check if any rows were affected
+        if (affectedRows === 0) throw new Error('Document not found');
+
+        // Fetch the updated record
+        const updatedRecord = await Model.findByPk(id);
+        if (!updatedRecord) throw new Error('Failed to retrieve updated document');
+
+        return updatedRecord;
     } catch (error) {
+        // Log and rethrow the error
+        console.error('Error updating record:', error.message);
         throw new Error(error.message);
     }
 };
 
+
+// Delete a document by ID
 const deleteById = async (Model, id) => {
     try {
-        const doc = await Model.findByIdAndDelete(id);
-        if (!doc) throw new Error('Document not found');
+        const doc = await readById(Model, id);
+        await doc.destroy();
         return doc;
     } catch (error) {
         throw new Error(error.message);
     }
 };
 
+// Handler for creating a document
 const handleCreate = (Model) => async (req, res) => {
     try {
         const doc = await createOne(Model, req.body);
@@ -224,21 +245,23 @@ const handleCreate = (Model) => async (req, res) => {
     }
 };
 
+// Handler for reading all documents
 const handleReadAll = (Model) => {
-  return async (req, res) => {
-    try {
-      // Log the received query parameters
-      console.log('Received query parameters:', req.query);
+    return async (req, res) => {
+        try {
+            // Log the received query parameters
+            console.log('Received query parameters:', req.query);
 
-      // Call readAll with the query parameters
-      const result = await readAll(Model, req.query);
-      res.status(200).json(result);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
-  };
+            // Call readAll with the query parameters
+            const result = await readAll(Model, req.query);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    };
 };
 
+// Handler for reading a document by ID
 const handleReadById = (Model) => async (req, res) => {
     try {
         const doc = await readById(Model, req.params.id);
@@ -248,6 +271,7 @@ const handleReadById = (Model) => async (req, res) => {
     }
 };
 
+// Handler for updating a document by ID
 const handleUpdateById = (Model) => async (req, res) => {
     try {
         const doc = await updateById(Model, req.params.id, req.body);
@@ -257,15 +281,17 @@ const handleUpdateById = (Model) => async (req, res) => {
     }
 };
 
+// Handler for deleting a document by ID
 const handleDeleteById = (Model) => async (req, res) => {
     try {
-        await deleteById(Model, req.params.id);
-        res.status(200).json({ message: 'Document deleted successfully' });
+        const doc = await deleteById(Model, req.params.id);
+        res.status(200).json(doc);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 };
 
+// Export functions
 module.exports = {
     createOne,
     readAll,
@@ -278,5 +304,5 @@ module.exports = {
     handleReadAll,
     handleReadById,
     handleUpdateById,
-    handleDeleteById,
+    handleDeleteById
 };
