@@ -11,7 +11,10 @@ const profileRoutes = require('./routes/profile');
 const currencyRoutes = require('./routes/currencyRoutes');
 const countryRoutes = require('./routes/countryRoutes');
 const projectRoutes = require('./routes/projectRoutes');
+const logisticPointRoutes = require('./routes/logisticPointRoutes'); // 
+const itemsRoutes = require('./routes/itemsRoutes'); // 
 const itemGroupRoutes = require('./routes/itemGroupRoutes');
+const itemCodesRoutes = require('./routes/itemCodesRoutes'); // 
 const transportRoutes = require('./routes/transportTypeRoutes');
 const transportContractRoutes = require('./routes/transportContractRoutes');
 const exportRoutes = require('./routes/exportRoutes');
@@ -42,7 +45,10 @@ app.use('/profiles', profileRoutes);
 app.use('/currencies', currencyRoutes);
 app.use('/countries', countryRoutes);
 app.use('/projects', projectRoutes);
+app.use('/logisticPoints', logisticPointRoutes);
+app.use('/items', itemsRoutes);
 app.use('/item-groups', itemGroupRoutes);
+app.use('/item-codes', itemCodesRoutes);
 app.use('/transport-types', transportRoutes);
 app.use('/transport-contracts', transportContractRoutes);
 app.use('/', exportRoutes);
