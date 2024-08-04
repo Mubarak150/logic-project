@@ -11,8 +11,8 @@ const {
 
 router.post('/', protect,  createTransport);
 router.get('/', protect, getAllTransports);
-router.get('/:id', getTransportById);
-router.put('/:id', updateTransportById);
-router.delete('/:id', deleteTransportById);
+router.get('/:id', protect, getTransportById);
+router.patch('/:id', protect, updateTransportById);
+router.delete('/:id', protect, deleteTransportById);
 
 module.exports = router;

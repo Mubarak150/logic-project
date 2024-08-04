@@ -1,4 +1,5 @@
 const express = require('express');
+const {protect} = require('../middleware/auth')
 const router = express.Router();
 const {
   createWarehouse,
@@ -8,10 +9,10 @@ const {
   deleteWarehouseById,
 } = require('../controllers/warehouseController');
 
-router.post('/', createWarehouse);
-router.get('/', getAllWarehouses);
-router.get('/:id', getWarehouseById);
-router.put('/:id', updateWarehouseById);
-router.delete('/:id', deleteWarehouseById);
+router.post('/', protect, createWarehouse);
+router.get('/', protect, getAllWarehouses);
+router.get('/:id', protect, getWarehouseById);
+router.patch('/:id', protect, updateWarehouseById);
+router.delete('/:id', protect, deleteWarehouseById);
 
 module.exports = router;

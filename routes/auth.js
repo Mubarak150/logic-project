@@ -6,6 +6,6 @@ const router = express.Router();
 // for dev: all the three are defined in authController... 
 router.post('/sign-in', checkSignIn, signIn);
 router.post('/register', protect, registerAdmin);
-router.post('/logout', logout); // log out
+router.post('/logout', protect, logout); // log out
 
 module.exports = router;

@@ -9,10 +9,10 @@ const {
   deleteCountryById,
 } = require('../controllers/countryController');
 
-router.post('/', createCountry);
-router.get('/', getAllCountries);
-router.get('/:id', getCountryById);
-router.put('/:id', updateCountryById);
-router.delete('/:id', deleteCountryById);
+router.post('/', protect, createCountry);
+router.get('/', protect, getAllCountries);
+router.get('/:id', protect, getCountryById);
+router.patch('/:id', protect, updateCountryById);
+router.delete('/:id', protect, deleteCountryById);
 
 module.exports = router;

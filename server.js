@@ -44,7 +44,7 @@ app.use('/countries', countryRoutes);
 app.use('/projects', projectRoutes);
 app.use('/item-groups', itemGroupRoutes);
 app.use('/transport-types', transportRoutes);
-app.use('/transport-contract', transportContractRoutes);
+app.use('/transport-contracts', transportContractRoutes);
 app.use('/', exportRoutes);
 
 // Handles any requests that don't match the ones above

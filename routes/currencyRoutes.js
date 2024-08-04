@@ -11,8 +11,8 @@ const {
 
 router.post('/', protect, createCurrency);
 router.get('/', protect, getAllCurrencies);
-router.get('/:id', getCurrencyById);
-router.put('/:id', updateCurrencyById);
-router.delete('/:id', deleteCurrencyById);
+router.get('/:id', protect, getCurrencyById);
+router.patch('/:id', protect, updateCurrencyById);
+router.delete('/:id', protect, deleteCurrencyById);
 
 module.exports = router;
