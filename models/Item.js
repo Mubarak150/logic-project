@@ -79,4 +79,6 @@ const Item = sequelize.define('Item', {
   tableName: 'items' // Specify the table name if different from model name
 });
 
+
+
 module.exports = Item;

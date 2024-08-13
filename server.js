@@ -5,6 +5,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
+const defineAssociations = require('./modelRelations');
 const authRoutes = require('./routes/auth');
 const warehouseRoutes = require('./routes/warehouseRoutes');
 const profileRoutes = require('./routes/profile');
@@ -17,7 +18,16 @@ const itemGroupRoutes = require('./routes/itemGroupRoutes');
 const itemCodesRoutes = require('./routes/itemCodesRoutes'); // 
 const transportRoutes = require('./routes/transportTypeRoutes');
 const transportContractRoutes = require('./routes/transportContractRoutes');
+const consignmentRoutes = require('./routes/consignmentRoutes'); 
+const requisitionNoteRoutes = require('./routes/requisitionNoteRoutes');
+const goodsReceivedRoutes = require('./routes/goodsReceivedRoutes');
+const adjustmentRoutes = require('./routes/adjustmentRoutes');
+const previousStockRoutes = require('./routes/previousStockRoutes');
+const wayBillOutRoutes = require('./routes/wayBillOutRoutes');
+const wayBillInRoutes = require('./routes/wayBillInRoutes');
+const returningNoteRoutes = require('./routes/returningNoteRoutes');
 const exportRoutes = require('./routes/exportRoutes');
+// const db = require('./models');
 
 require('dotenv').config();
 
@@ -38,20 +48,38 @@ if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir);
 }
 
+// Define associations
+defineAssociations();
+
 // Routes setup
-app.use('/api/auth', authRoutes);
-app.use('/warehouses', warehouseRoutes);
-app.use('/profiles', profileRoutes);
-app.use('/currencies', currencyRoutes);
-app.use('/countries', countryRoutes);
-app.use('/projects', projectRoutes);
-app.use('/logisticPoints', logisticPointRoutes);
-app.use('/items', itemsRoutes);
-app.use('/item-groups', itemGroupRoutes);
-app.use('/item-codes', itemCodesRoutes);
-app.use('/transport-types', transportRoutes);
-app.use('/transport-contracts', transportContractRoutes);
+// 1. exporting excel
 app.use('/', exportRoutes);
+
+// 1. auth (registration, signin, and logout )
+app.use('/api/auth', authRoutes);
+
+// 1. master data: 
+app.use('/master-data/profiles', profileRoutes);
+app.use('/master-data/warehouses', warehouseRoutes);
+app.use('/master-data/currencies', currencyRoutes);
+app.use('/master-data/countries', countryRoutes);
+app.use('/master-data/projects', projectRoutes);
+app.use('/master-data/logisticPoints', logisticPointRoutes);
+app.use('/master-data/items', itemsRoutes);
+app.use('/master-data/item-groups', itemGroupRoutes);
+app.use('/master-data/item-codes', itemCodesRoutes);
+app.use('/master-data/transport-types', transportRoutes);
+app.use('/master-data/transport-contracts', transportContractRoutes);
+
+// 2. logistic documents:
+app.use('/logistics-documents/consignments', consignmentRoutes);
+app.use('/logistics-documents/requisition-notes', requisitionNoteRoutes);
+app.use('/logistics-documents/goods-received', goodsReceivedRoutes);
+app.use('/logistics-documents/adjustments', adjustmentRoutes);
+app.use('/logistics-documents/previous-stocks', previousStockRoutes);
+app.use('/logistics-documents/way-bill-outs', wayBillOutRoutes); 
+app.use('/logistics-documents/way-bill-ins', wayBillInRoutes); 
+app.use('/logistics-documents/returning-notes', returningNoteRoutes);
 
 // Handles any requests that don't match the ones above
 app.get('*', (req, res) => {

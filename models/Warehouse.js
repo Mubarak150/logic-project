@@ -24,4 +24,6 @@ const Warehouse = sequelize.define('Warehouse', {
     timestamps: true // Automatically add createdAt and updatedAt fields
 });
 
+
+
 module.exports = Warehouse;
