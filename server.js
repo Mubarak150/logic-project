@@ -26,6 +26,7 @@ const previousStockRoutes = require('./routes/previousStockRoutes');
 const wayBillOutRoutes = require('./routes/wayBillOutRoutes');
 const wayBillInRoutes = require('./routes/wayBillInRoutes');
 const returningNoteRoutes = require('./routes/returningNoteRoutes');
+const inOutDetailedCTNReport = require('./routes/reports/inOutDetailedCTNReport');
 const exportRoutes = require('./routes/exportRoutes');
 // const db = require('./models');
 
@@ -64,7 +65,7 @@ app.use('/master-data/warehouses', warehouseRoutes);
 app.use('/master-data/currencies', currencyRoutes);
 app.use('/master-data/countries', countryRoutes);
 app.use('/master-data/projects', projectRoutes);
-app.use('/master-data/logisticPoints', logisticPointRoutes);
+app.use('/master-data/logistic-points', logisticPointRoutes);
 app.use('/master-data/items', itemsRoutes);
 app.use('/master-data/item-groups', itemGroupRoutes);
 app.use('/master-data/item-codes', itemCodesRoutes);
@@ -80,6 +81,9 @@ app.use('/logistics-documents/previous-stocks', previousStockRoutes);
 app.use('/logistics-documents/way-bill-outs', wayBillOutRoutes); 
 app.use('/logistics-documents/way-bill-ins', wayBillInRoutes); 
 app.use('/logistics-documents/returning-notes', returningNoteRoutes);
+
+// 3. reports: 
+app.use('/reports/item-in-out', inOutDetailedCTNReport);
 
 // Handles any requests that don't match the ones above
 app.get('*', (req, res) => {

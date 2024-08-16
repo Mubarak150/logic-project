@@ -9,8 +9,8 @@ const {
   deleteLogisticPointById,
 } = require('../controllers/logisticPointController');
 
-router.post('/', protect, createLogisticPoint);
-router.get('/', protect, getAllLogisticPoints);
+router.post('/', createLogisticPoint);
+router.get('/', getAllLogisticPoints);
 router.get('/:id', protect, getLogisticPointById);
 router.patch('/:id', protect, updateLogisticPointById);
 router.delete('/:id', protect, deleteLogisticPointById);

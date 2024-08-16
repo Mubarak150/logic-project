@@ -9,10 +9,10 @@ const {
   deleteItemById,
 } = require('../controllers/itemsController');
 
-router.post('/', protect, createItem);
-router.get('/', protect, getAllItems);
-router.get('/:id', protect, getItemById);
-router.patch('/:id', protect, updateItemById);
-router.delete('/:id', protect, deleteItemById);
+router.post('/', createItem);
+router.get('/', getAllItems);
+router.get('/:id', getItemById);
+router.patch('/:id', updateItemById);
+router.delete('/:id', deleteItemById);
 
 module.exports = router;

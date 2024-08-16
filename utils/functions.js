@@ -249,14 +249,13 @@ const handleCreate = (Model) => async (req, res) => {
 const handleReadAll = (Model) => {
     return async (req, res) => {
         try {
-            // Log the received query parameters
-            console.log('Received query parameters:', req.query);
+            // console.log('Received query parameters:', req.query);
 
             // Call readAll with the query parameters
             const result = await readAll(Model, req.query);
-            res.status(200).json(result);
+            res.status(200).json({status: 'success', data: result});
         } catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error });
         }
     };
 };

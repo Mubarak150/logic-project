@@ -19,7 +19,7 @@ const defineAssociations = () => {
   
   // Warehouse and Item relationship
   Warehouse.hasMany(Item, { foreignKey: 'warehouseId' });
-  Item.belongsTo(Warehouse, { foreignKey: 'warehouseId' });
+  // Item.belongsTo(Warehouse, { foreignKey: 'warehouseId' });
   RequisitionNoteItem.belongsTo(RequisitionNote, { foreignKey: 'requisitionId' });
 
   // Consignment and Document relationship

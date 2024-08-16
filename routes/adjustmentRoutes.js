@@ -11,10 +11,10 @@ const {
 } = require('../controllers/adjustmentController');
 
 // Create a Adjustment along with items
-router.post('/', createAdjustment);
+router.post('/', protect, createAdjustment);
 
 // Update a Adjustment along with its items
-router.patch('/:id', updateAdjustment);
+router.patch('/:id', protect, updateAdjustment);
 
 // Delete a Adjustment along with its items
 router.delete('/:id', deleteAdjustment);
